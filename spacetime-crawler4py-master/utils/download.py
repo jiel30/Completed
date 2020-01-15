@@ -1,0 +1,30 @@
+import requests
+import cbor
+import time
+
+from utils.response import Response
+
+def download(url, config, logger=None):
+    host, port = config.cache_server
+#    print("going to download" + url);
+    check = 0
+    while True:
+        try:
+            resp = requests.get(
+                                f"http://{host}:{port}/",
+                                params=[("q", f"{url}"), ("u", f"{config.user_agent}")],
+                                timeout=(5,60))
+            break
+        except:
+            if check == 3:
+                return None
+            check += 1
+            continue
+    if resp:
+#        print('download successful')
+        return Response(cbor.loads(resp.content))
+    logger.error(f"Spacetime Response error {resp} with url {url}.")
+    return Response({
+        "error": f"Spacetime Response error {resp} with url {url}.",
+        "status": resp.status_code,
+        "url": url})
